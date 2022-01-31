@@ -1,7 +1,7 @@
 """Module entry point"""
 import argparse
 from steampurch import __doc__, __version__
-from steampurch import htmlhistory, export
+from steampurch import htmlhistory, export, analyze
 
 
 if __name__ == "__main__":
@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
     print("Steam purchase history parsing start.")
     data = htmlhistory.read_html_file(args.input)
+    data = analyze.convert(data)
     #for d in data:
     #    print(d)
     if args.json_output:

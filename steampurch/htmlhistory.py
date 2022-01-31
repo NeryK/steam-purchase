@@ -2,10 +2,11 @@
 from collections import namedtuple
 from bs4 import BeautifulSoup
 
-Transaction = namedtuple("Transaction", "date, items, type, payment, total, wallet_change, wallet_balance")
+Transaction = namedtuple(
+    "Transaction", "date, items, type, payment, total_amount, total_additional, wallet_change, wallet_balance")
 
 def parse_row(row):
-    """Parse a row of Steam purchase history table into a named tuple"""
+    """Parse a row of Steam purchase history table into a named tuple of strings"""
     transaction_data = []
     # Raw Date
     cursor = row.find("td", {"class": "wht_date"})
@@ -27,9 +28,14 @@ def parse_row(row):
         [payment for payment in payment_mean.strip().split("\t") if payment != ""]
             for payment_mean in payment_means.split("\n")
             if payment_mean != ""])
-    # Amount
-    transaction_data.append(
-        row.find("td", {"class": "wht_total"}).get_text().strip().replace("\t", "").replace("\n", " "))
+    # Total amount
+    cursor = row.find("td", {"class": "wht_total"})
+    total = cursor.get_text().strip().replace("\t", "").replace("\n", " ").split(" ", 1)
+    transaction_data.append(total[0])
+    if len(total) == 1:
+        transaction_data.append("")
+    else:
+        transaction_data.append(total[1])
     # Wallet amount change
     transaction_data.append(row.find("td", {"class": "wht_wallet_change"}).get_text().strip())
     # Wallet balance
