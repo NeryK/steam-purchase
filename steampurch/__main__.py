@@ -1,7 +1,5 @@
 """Module entry point"""
-import os
 import argparse
-import pathlib
 from steampurch import __doc__, __version__
 from steampurch import htmlhistory, export
 
