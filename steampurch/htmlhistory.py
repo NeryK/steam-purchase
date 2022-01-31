@@ -1,6 +1,6 @@
 """Parse Steam purchase history HTML file"""
 from bs4 import BeautifulSoup
-import json
+
 from collections import namedtuple
 
 Transaction = namedtuple("Transaction", "date, items, type, payment, total, wallet_change, wallet_balance")
@@ -22,7 +22,11 @@ def parse_row(row):
     # Transaction type
     transaction_data.append(row.find("td", {"class": "wht_type"}).div.get_text().strip())
     # Payment means
-    transaction_data.append(row.find("td", {"class": "wht_type"}).find("div", {"class": "wth_payment"}).get_text().strip().replace("\t", " "))
+    payment_means = row.find("td", {"class": "wht_type"}).find("div", {"class": "wth_payment"}).get_text().strip()
+    transaction_data.append([
+        [payment for payment in payment_mean.strip().split("\t") if payment != ""]
+            for payment_mean in payment_means.split("\n")
+            if payment_mean != ""])
     # Amount
     transaction_data.append(row.find("td", {"class": "wht_total"}).get_text().strip().replace("\t", "").replace("\n", " "))
     # Wallet amount change
@@ -35,13 +39,9 @@ def parse_html(html):
     soup = BeautifulSoup(html, "html.parser")
     main_table = soup.find("table", {"class": "wallet_history_table"})
     if main_table:
-        return [parse_row(row) for row in main_table.tbody.find_all("tr", recursive=False)]
+        return [parsed_row for row in main_table.tbody.find_all("tr", recursive=False) if (parsed_row := parse_row(row)) is not None]
     return []
 
 def read_html_file(html_file_path):
     with open(html_file_path, "r", encoding="utf-8") as html_file:
         return parse_html(html_file.read())
-
-def write_json_file(json_file_path, data):
-    with open(json_file_path, "w", encoding="utf-8") as json_file:
-        json_file.write(json.dumps([transaction._asdict() for transaction in data if transaction is not None]))
