@@ -2,8 +2,9 @@
 from collections import namedtuple
 from bs4 import BeautifulSoup
 
-Transaction = namedtuple(
-    "Transaction", "date, items, type, payment, total_amount, total_additional, wallet_change, wallet_balance")
+Transaction = namedtuple("Transaction", [
+    "date", "is_refund", "is_credit", "items", "type", "payment", "total_amount", "total_additional", "wallet_change",
+    "wallet_balance"])
 
 def parse_row(row):
     """Parse a row of Steam purchase history table into a named tuple of strings"""
@@ -13,6 +14,13 @@ def parse_row(row):
     if not cursor:
         return None
     transaction_data.append(cursor.get_text().strip())
+    # Refund ?
+    cursor = row.find("div", {"class": "wth_item_refunded"})
+    transaction_data.append(cursor is not None)
+    # Credit ?
+    # Extrapolated : seems that a payment type after a total is always a market credit
+    cursor = row.find("td", {"class": "wht_total"}).find("div", {"class": "wth_payment"})
+    transaction_data.append(cursor is not None)
     # Multiple items
     cursor = row.find("td", {"class": "wht_items"})
     items = [item.get_text().strip().split("\t", 1)[0] for item in cursor.find_all("div")]

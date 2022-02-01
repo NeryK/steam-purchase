@@ -5,8 +5,8 @@ import price_parser
 
 ConvertedTransaction = namedtuple(
     "ConvertedTransaction", [
-        "isodate", "items", "type", "payment", "total_amount_numeric", "total_currency", "total_additional",
-        "wallet_change", "wallet_balance_numeric", "wallet_balance_currency"])
+        "isodate", "is_refund", "is_credit", "items", "type", "payment", "total_amount_numeric", "total_currency",
+        "total_additional", "wallet_change", "wallet_balance_numeric", "wallet_balance_currency"])
 
 def convert(data):
     """Read strings into objects"""
@@ -20,9 +20,9 @@ def convert(data):
         else:
             wallet_balance_price_amount = None
         converted_data.append(ConvertedTransaction(
-            isodate, transaction.items, transaction.type, transaction.payment, float(total_price.amount),
-            total_price.currency, transaction.total_additional, transaction.wallet_change,
-            wallet_balance_price_amount, wallet_balance_price.currency))
+            isodate, transaction.is_refund, transaction.is_credit, transaction.items, transaction.type,
+            transaction.payment, float(total_price.amount), total_price.currency, transaction.total_additional,
+            transaction.wallet_change, wallet_balance_price_amount, wallet_balance_price.currency))
     return converted_data
 
 def sum_transactions(transactions, currency):
@@ -30,14 +30,13 @@ def sum_transactions(transactions, currency):
     total_debit = sum([
         transaction.total_amount_numeric
         for transaction in transactions
-        if transaction.total_additional != "Credit"
-        and not transaction.wallet_change.startswith("+")
+        if not transaction.is_refund
+        and not transaction.wallet_change.startswith("-")
         and transaction.total_currency == currency])
     total_credit = sum([
         transaction.total_amount_numeric
         for transaction in transactions
-        if (transaction.total_additional == "Credit"
-        or transaction.type == "Refund")
+        if (transaction.is_refund or transaction.is_credit)
         and transaction.total_currency == currency])
     return currency, round(total_debit - total_credit, 2)
 

@@ -19,4 +19,10 @@ Tool to export Steam purchase history to CSV or JSON, and also display some stat
 
 - Output JSON instead of CSV (or both) `python -m steampurch -i "C:\Temp\NeryK's account.htm" -j "C:\Temp\neryk_transactions.json"`
 - Write stats to stdout `python -m steampurch -i "C:\Temp\NeryK's account.htm" -s`
-  - This currently only works if the web page was displayed in English
+  - Available stats yearly spent amount, total spent amount
+
+## Caveats
+
+- Transactions that use both wallet and another payment mean may not be handled properly
+- Prepaid card are considered a spent amount when they are redeemed
+- Wallet spending is ignored, since it is in fact money already spent
