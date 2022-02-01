@@ -27,16 +27,20 @@ def convert(data):
 
 def sum_transactions(transactions, currency):
     """Sum debit and credit transactions for a given currency"""
+    # Total debit = sum of transactions that are not refunds and do not decrease wallet
     total_debit = sum([
         transaction.total_amount_numeric
         for transaction in transactions
         if not transaction.is_refund
         and not transaction.wallet_change.startswith("-")
         and transaction.total_currency == currency])
+    # Total credit = sum of transactions that are either:
+    # - refunds that do not increase wallet
+    # - credits (likely from the marketplace)
     total_credit = sum([
         transaction.total_amount_numeric
         for transaction in transactions
-        if (transaction.is_refund or transaction.is_credit)
+        if ((transaction.is_refund and not transaction.wallet_change.startswith("+")) or transaction.is_credit)
         and transaction.total_currency == currency])
     return currency, round(total_debit - total_credit, 2)
 
